@@ -75,26 +75,34 @@ def _to_snake_case(text: str) -> str:
 
 
 def _sanitize_schema_type(schema: dict[str, Any]) -> dict[str, Any]:
-  if ("type" not in schema or not schema["type"]) and schema.keys().isdisjoint(
-      schema
-  ):
-    schema["type"] = "object"
-  if isinstance(schema.get("type"), list):
-    nullable = False
-    non_null_type = None
-    for t in schema["type"]:
-      if t == "null":
-        nullable = True
-      elif not non_null_type:
-        non_null_type = t
-    if not non_null_type:
-      non_null_type = "object"
-    if nullable:
-      schema["type"] = [non_null_type, "null"]
-    else:
-      schema["type"] = non_null_type
-  elif schema.get("type") == "null":
-    schema["type"] = ["object", "null"]
+  """Sanitizes the 'type' field and adds default 'items' for arrays."""
+  type_val = schema.get("type")
+  non_null_type = None
+  nullable = False
+
+  # First, determine the base type and nullability
+  if isinstance(type_val, list):
+    nullable = "null" in type_val
+    non_null_types = [t for t in type_val if t != "null"]
+    non_null_type = non_null_types[0] if non_null_types else None
+  elif type_val == "null":
+    nullable = True
+  else:
+    non_null_type = type_val
+
+  # Default to 'object' if no other type is found
+  if not non_null_type:
+    non_null_type = "object"
+
+  # Single, consolidated check to add default 'items' for arrays
+  if non_null_type == "array" and "items" not in schema:
+    schema["items"] = {"type": "string"}
+
+  # Finally, set the schema 'type' based on nullability
+  if nullable:
+    schema["type"] = [non_null_type, "null"]
+  else:
+    schema["type"] = non_null_type
 
   return schema
 

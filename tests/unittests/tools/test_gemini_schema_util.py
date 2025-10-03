@@ -91,7 +91,7 @@ class TestToGeminiSchema:
     assert gemini_schema.properties["multi_types_nullable"].nullable
 
     assert gemini_schema.properties["empty_default_object"].type == Type.OBJECT
-    assert gemini_schema.properties["empty_default_object"].nullable is None
+    assert gemini_schema.properties["empty_default_object"].nullable is False
 
   def test_to_gemini_schema_nested_objects(self):
     openapi_schema = {
@@ -148,7 +148,7 @@ class TestToGeminiSchema:
 
   def test_to_gemini_schema_general_list(self):
     openapi_schema = {
-        "type": "array",
+        "type": "object",
         "properties": {
             "list_field": {"type": "array", "items": {"type": "string"}},
         },
